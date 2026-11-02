@@ -1,0 +1,14 @@
+name: "Exercise: 2"
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  exercise:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say hello
+        run: echo "Hello World!"
