@@ -1,0 +1,46 @@
+name: "Exercise: 13"
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+jobs:
+  simple_deployment_pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install
+      - name: Check style
+        run: npm run eslint
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm test
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: e2e tests
+        run: npm run test:e2e
+      - name: Trigger deployment
+        run: curl ${{ secrets.RENDER_DEPLOY_HOOK }}
+      - name: Health check
+        run: |
+          for i in $(seq 1 30); do
+            status=$(curl --max-time 15 -s -o /dev/null -w "%{http_code}" https://fs-pokedex.onrender.com/health || true)
+            if [ "$status" = "200" ]; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Waiting for deployment... attempt $i (status: $status)"
+            sleep 20
+          done
+          echo "Health check failed"
+          exit 1
