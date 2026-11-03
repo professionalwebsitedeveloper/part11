@@ -2,6 +2,10 @@
 
 This repository is used for the CI/CD module of the Full Stack Open course
 
+## Deployed app
+
+https://part11-a7zr.onrender.com
+
 ## Commands
 
 Start by running `npm install` inside the project folder
