@@ -31,7 +31,7 @@ jobs:
       - name: Health check
         run: |
           for i in $(seq 1 30); do
-            status=$(curl --max-time 15 -s -o /dev/null -w "%{http_code}" https://part11-a7zr.onrender.com/health || true)
+            status=$(curl --max-time 15 -s -o /dev/null -w "%{http_code}" https://fs-pokedex.onrender.com/health || true)
             if [ "$status" = "200" ]; then
               echo "Health check passed"
               exit 0
