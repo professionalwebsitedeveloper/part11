@@ -1,4 +1,4 @@
-# Full Stack Open CI/CD - Exercise 14 Test
+# Full Stack Open CI/CD - Exercise 15 Test
 
 This repository is used for the CI/CD module of the Full Stack Open course
 
