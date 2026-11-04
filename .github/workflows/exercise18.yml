@@ -1,0 +1,76 @@
+name: "Exercise: 18"
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+jobs:
+  simple_deployment_pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install
+      - name: Check style
+        run: npm run eslint
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm test
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: e2e tests
+        run: npm run test:e2e
+      - name: Trigger deployment
+        if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message, ''), '#skip') }}
+        run: curl ${{ secrets.RENDER_DEPLOY_HOOK }}
+      - name: Health check
+        if: ${{ github.event_name == 'push' && !contains(join(github.event.commits.*.message, ''), '#skip') }}
+        run: |
+          for i in $(seq 1 30); do
+            status=$(curl --max-time 15 -s -o /dev/null -w "%{http_code}" https://fs-pokedex.onrender.com/health || true)
+            if [ "$status" = "200" ]; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Waiting for deployment... attempt $i (status: $status)"
+            sleep 20
+          done
+          echo "Health check failed"
+          exit 1
+      - name: Notify Discord on success
+        if: ${{ success() && github.event_name == 'push' }}
+        run: |
+          curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
+            -H "Content-Type: application/json" \
+            -d '{"content": "✅ Deployment successful! A new version has been deployed to production."}'
+      - name: Notify Discord on failure
+        if: ${{ failure() }}
+        run: |
+          curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
+            -H "Content-Type: application/json" \
+            -d '{
+              "content": "❌ Build failed!",
+              "embeds": [{
+                "title": "Build Failure Details",
+                "color": 15158332,
+                "fields": [
+                  {"name": "Repository", "value": "${{ github.repository }}", "inline": true},
+                  {"name": "Branch", "value": "${{ github.ref }}", "inline": true},
+                  {"name": "Commit", "value": "${{ github.sha }}", "inline": true},
+                  {"name": "Message", "value": "${{ github.event.head_commit.message }}", "inline": false},
+                  {"name": "Author", "value": "${{ github.event.head_commit.author.name }}", "inline": true},
+                  {"name": "Workflow", "value": "${{ github.workflow }}", "inline": true}
+                ]
+              }]
+            }'
