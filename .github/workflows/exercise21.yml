@@ -33,11 +33,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger deployment
-        run: echo "Deploying application to production..."
+        run: curl ${{ secrets.RENDER_DEPLOY_HOOK }}
       - name: Health check
         run: |
-          echo "Health check placeholder - add your deployment URL here"
-          # Example: curl --max-time 15 -s -o /dev/null -w "%{http_code}" https://your-app.onrender.com/health
+          for i in $(seq 1 30); do
+            status=$(curl --max-time 15 -s -o /dev/null -w "%{http_code}" https://fs-pokedex.onrender.com/health || true)
+            if [ "$status" = "200" ]; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Waiting for deployment... attempt $i (status: $status)"
+            sleep 20
+          done
+          echo "Health check failed"
+          exit 1
 
   tag_release:
     needs: [deploy]
