@@ -1,0 +1,40 @@
+name: "Exercise: 21"
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install
+      - name: Check style
+        run: npm run lint
+      - name: Build
+        run: npm run build
+
+  deploy:
+    needs: [build_and_test]
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger deployment
+        run: echo "Deploying anecdotes app to production..."
+      - name: Health check
+        run: |
+          echo "Health check placeholder - add your deployment URL here"
+          # Example: curl --max-time 15 -s -o /dev/null -w "%{http_code}" https://your-app.onrender.com/health
