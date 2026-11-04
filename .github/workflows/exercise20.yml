@@ -1,0 +1,21 @@
+name: "Exercise: 20"
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+
+jobs:
+  health_check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Periodic health check
+        run: |
+          status=$(curl --max-time 15 -s -o /dev/null -w "%{http_code}" https://fs-pokedex.onrender.com/health || true)
+          if [ "$status" = "200" ]; then
+            echo "Health check passed: $status"
+            exit 0
+          else
+            echo "Health check failed: $status"
+            exit 1
+          fi
