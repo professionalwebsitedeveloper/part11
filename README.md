@@ -1,4 +1,4 @@
-# Full Stack Open CI/CD - Exercise 16 Skip Test
+# Full Stack Open CI/CD - Exercise 16 No Skip Test
 
 This repository is used for the CI/CD module of the Full Stack Open course
 
